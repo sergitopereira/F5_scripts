@@ -14,6 +14,8 @@ class IControl(object):
         }
         self.url_base = f"https://{self.ip}:{self.port}/mgmt/tm"
         self.f5token = None
+        self.username = None
+        self.password = None
 
     def get_call(self, url):
         """
@@ -87,6 +89,8 @@ class IControl(object):
         :param password: F5 password
         :return:
         """
+        self.username = username
+        self.password = password
         url_auth = f"https://{self.ip}:{self.port}/mgmt/shared/authn/login"
         post_data = {
             'username': username,
@@ -106,13 +110,22 @@ class IControl(object):
         except requests.exceptions.HTTPError as err:
             raise RuntimeError(err)
 
-    def list_virtual_servers(self, filer=None):
+    def _update_token_header(self, token):
+        self.headers = {
+            'Content-Type': 'application/json',
+            'X-F5-Auth-Token': token
+        }
+
+    def list_virtual_servers(self, filter=None, token=None):
         """
         method to list ltm virtual servers
+        :param token: F5 token. not required
         :return: list of virtual servers
         """
+        if token:
+            self._update_token_header(token)
         url = f"{self.url_base}/ltm/virtual/"
         r = self.get_call(url)
-        print(self.headers)
-        print(f'curl -jkv {url} -x GET -H\'{self.headers}\'')
+        print(
+            f'curl -sk -u {self.username}:{self.password} -H "Content-Type: application/json" -X GET {url} | jq .items')
         return r

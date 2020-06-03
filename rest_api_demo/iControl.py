@@ -17,29 +17,32 @@ class IControl(object):
         self.username = None
         self.password = None
 
-    def get_call(self, url):
+    def get_call(self, url, verify=False):
         """
         HTTP method GET
         :param url: resource identifier
+        :param verify: True to verify ssl certificate
         :return: json restfull api response
         """
-        r = requests.get(url, headers=self.headers, verify=False)
+        r = requests.get(url, headers=self.headers, verify=verify)
         try:
             if r.status_code == 200:
                 return r.json()
             else:
+                print(url)
                 raise SystemExit(f'iControl GET API call failed, HTTP RESPONSE code {r.status_code}')
         except requests.exceptions.HTTPError as err:
             raise RuntimeError(err)
 
-    def post_call(self, url, post_data):
+    def post_call(self, url, post_data, verify=False):
         """
         HTTP method POST
         :param url: resource identifier
         :param post_data: post data
+        :param verify: True to verify ssl certificate
         :return: json rest api response
         """
-        r = requests.post(url, json.dumps(post_data), headers=self.headers, verify=False)
+        r = requests.post(url, json.dumps(post_data), headers=self.headers, verify=verify)
         try:
             if r.status_code == 200:
                 return r.json()
@@ -49,14 +52,15 @@ class IControl(object):
         except requests.exceptions.HTTPError as err:
             raise RuntimeError(err)
 
-    def patch_call(self, url, patch_data):
+    def patch_call(self, url, patch_data,verify):
         """
         HTTP Method PATCH
         :param url: url for api call
         :param patch_data: patch data
+        :param verify: True to verify ssl certificate
         :return: json rest api
         """
-        r = requests.patch(url, json.dumps(patch_data), headers=self.headers, verify=False)
+        r = requests.patch(url, json.dumps(patch_data), headers=self.headers, verify=verify)
         try:
             if r.status_code == 200:
                 return r.json()
@@ -66,15 +70,16 @@ class IControl(object):
         except requests.exceptions.HTTPError as err:
             raise RuntimeError(err)
 
-    def put_call(self, url, put_data):
+    def put_call(self, url, put_data, verify):
         """
         HTTP METHOD PUT
         :param url: url for api call
         :param put_data: put data
+        :param verify: True to verify ssl certificate
         :return: json rest api
         """
         try:
-            r = requests.put(url, json.dumps(put_data), headers=self.headers, verify=False)
+            r = requests.put(url, json.dumps(put_data), headers=self.headers, verify=verify)
             if r.status_code == 200:
                 return r.json()
             else:
@@ -116,7 +121,7 @@ class IControl(object):
             'X-F5-Auth-Token': token
         }
 
-    def list_virtual_servers(self, filter=None, token=None):
+    def list_virtual_servers(self, token=None):
         """
         method to list ltm virtual servers
         :param token: F5 token. not required
@@ -129,3 +134,20 @@ class IControl(object):
         print(
             f'curl -sk -u {self.username}:{self.password} -H "Content-Type: application/json" -X GET {url} | jq .items')
         return r
+
+    def get_virtual_stats(self):
+        """
+        Method to obtain virtual server stats
+        :return: virtual server stats
+        """
+        resp = {}
+        vips = self.list_virtual_servers()
+        for vip in vips['items']:
+            partition = vip['partition']
+            vip = vip['name']
+            print(vip)
+            url = f"{self.url_base}/ltm/virtual/~{partition}~{vip}/stats"
+            r = self.get_call(url)
+            print(r)
+            resp[vip] = r
+        return resp

@@ -9,3 +9,4 @@ password = getpass('BigIP password: ')
 iControl = IControl(ip_address, port)
 iControl.get_token(username,password)
 iControl.list_virtual_servers()['items']
+iControl.get_virtual_stats()

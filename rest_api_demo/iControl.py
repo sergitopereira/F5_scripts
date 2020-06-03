@@ -22,7 +22,7 @@ class IControl(object):
         HTTP method GET
         :param url: resource identifier
         :param verify: True to verify ssl certificate
-        :return: json restfull api response
+        :return: json rest full api response
         """
         r = requests.get(url, headers=self.headers, verify=verify)
         try:
@@ -52,7 +52,7 @@ class IControl(object):
         except requests.exceptions.HTTPError as err:
             raise RuntimeError(err)
 
-    def patch_call(self, url, patch_data,verify):
+    def patch_call(self, url, patch_data, verify):
         """
         HTTP Method PATCH
         :param url: url for api call
